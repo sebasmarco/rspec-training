@@ -80,7 +80,7 @@ citadas en este `README`, además de la correspondiente configuración de entorn
 A continuación, se listan los comandos para clonar proyecto, ponerlo en marcha y correr los tests exitosamente:
 
 ```
-git clone git@gitlab.snappler.com:lightning-talks/rspec.git
+git clone https://github.com/lucashour/rspec-training.git
 cd rspec
 bundle install
 rails db:create db:migrate
@@ -164,6 +164,16 @@ junto con todas las dependencias enunciadas en este `README`:
     generator.test_framework :rspec
   end
   ```
+
+### Estructura de carpetas sugerida
+
+- `spec/`: Raíz de tests de aplicación.
+  - `spec/factories/`: Carpeta de definición de `factories` de datos, para lo cual se utiliza `FactoryBot`.
+  - `spec/controllers/`: Carpeta de definición de tests de controladores.
+  - `spec/models/`: Carpeta de definición de tests de modelos.
+  - `spec/services/`: Carpeta de definición de tests de servicios.
+  - `spec/rails_helper.rb`: Archivo de configuración de tests de Rails.
+  - `spec/spec_helper.rb`: Archivo de configuración de RSpec.
 
 ### Links de interés
 
