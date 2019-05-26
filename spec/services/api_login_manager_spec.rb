@@ -11,12 +11,13 @@ RSpec.describe ApiLoginManager do
   # en let!(:user) { ... }, usar esta variable.
   let!(:password) { SecureRandom.hex }
 
-  let!(:user) {  } # -- crear usuario con FactoryBot -- #
+  let!(:user) { FactoryBot.create(:user, password: password) } # -- crear usuario con FactoryBot -- #
 
   describe '#call' do
     context 'when user provided data is valid' do
       before do
         # Realizar un stub del ExternalValidator para que se ejecuta realmente
+        allow(ExternalValidator).to receive(:call).with(user.email).and_return(true)
       end
 
       subject do
@@ -24,61 +25,83 @@ RSpec.describe ApiLoginManager do
       end
 
       it "update user's auth_token" do
-        skip 'Una vez que definan a user, este test va a fallar. ¿Por qué?'
-        expect { subject }.to change { user.auth_token }
+        # skip 'Una vez que definan a user, este test va a fallar. ¿Por qué?'
+        # porque user queda cacheado, tenes que hacer un reload de user
+        expect { subject }.to change { user.reload.auth_token }
       end
 
       it 'returns the auth_token' do
-        skip 'Implementar'
+        is_expected.to eq(user.reload.auth_token)
       end
     end
 
     context 'when no email is provided' do
-      subject {  } # implementar
+      let(:api_log_manager) { described_class.new(password: password) }
+      subject { api_log_manager.call }
 
       it 'returns false' do
-        skip 'Implementar'
+        is_expected.to be_falsey
       end
 
       it 'returns EMPTY_EMAIL error with a reader' do
-        skip 'Implementar'
+        expect { subject }.to change { api_log_manager.error }.to(described_class::EMPTY_EMAIL)
       end
     end
 
     context 'when no password is provided' do
-      subject {  } # implementar
+      let(:api_log_manager) { described_class.new(email: user.email) }
+      subject { api_log_manager.call }
 
       it 'returns false' do
-        skip 'Implementar'
+        is_expected.to be_falsey
       end
 
       it 'returns EMPTY_PASSWORD error with a reader' do
-        skip 'Implementar'
+        expect { subject }.to change { api_log_manager.error }.to(described_class::EMPTY_PASSWORD)
       end
     end
 
     context 'when the email is incorrect' do
-      subject {  } # implementar
+      let(:api_log_manager) { described_class.new(email: 'cualquier_cosa', password: password) }
+      subject { api_log_manager.call }
 
       it 'returns false' do
-        skip 'Implementar'
+        is_expected.to be_falsey
       end
 
       it 'returns USER_NOT_FOUND error with a reader' do
-        skip 'Implementar'
+        expect { subject }.to change { api_log_manager.error }.to(described_class::USER_NOT_FOUND)
       end
     end
 
     context 'when the password is incorrect' do
-      subject {  } # implementar
+      let(:api_log_manager) { described_class.new(email: user.email, password: 'saraza') }
+      subject { api_log_manager.call }
 
       it 'returns false' do
-        skip 'Implementar'
+        is_expected.to be_falsey
       end
 
       it 'returns WRONG_PASSWORD error with a reader' do
-        skip 'Implementar'
+        expect { subject }.to change { api_log_manager.error }.to(described_class::WRONG_PASSWORD)
       end
+    end
+
+    context 'when ExternalValidator fails' do
+      let(:api_log_manager) { described_class.new(email: user.email, password: password) }
+
+      before do
+        allow(ExternalValidator).to receive(:call).with(user.email).and_return(false)
+      end
+
+      subject { api_log_manager.call }
+
+      it { is_expected.to be_falsey }
+
+      it 'returns EXTERNAL_VALIDATOR error with a reader' do
+        expect { subject }.to change { api_log_manager.error }.to(described_class::EXTERNAL_VALIDATOR)
+      end
+
     end
 
     # Definir un nuevo context para cuando la conexión
